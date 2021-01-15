@@ -16,8 +16,6 @@ aux_source_directory(./src DIR_SRCS)
 include_directories(./inc)
 add_executable(${CURRENT_FOLDER} ${DIR_SRCS})
 
-target_link_libraries(${CURRENT_FOLDER} ${OpenCV_LIBS})
-
 set(CMAKE_BUILD_TYPE "Debug")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

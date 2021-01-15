@@ -1,1 +1,0 @@
-/usr/bin/c++    -std=c++11 -pthread -g   CMakeFiles/mini-nezha.dir/src/uart.cpp.o CMakeFiles/mini-nezha.dir/src/main.cpp.o  -o mini-nezha -rdynamic 

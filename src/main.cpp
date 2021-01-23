@@ -1,24 +1,18 @@
 #include "uart.hpp"
 #include "Can.hpp"
 #include "Motor_rmd.hpp"
+#include "Motor_m2006.hpp"
 #include <time.h>
 #include <iostream>
 #include <string>
 
 using namespace std;
 
-int main(int argc, char const *argv[])
+void test_rmd()
 {
     int uart = uart_init(115200, (char*)"/dev/ttyACM0");
 
     Motor_rmd motor_rmd = Motor_rmd(Can(uart, 0, 0x141));
-
-    while(0==motor_rmd.get_error_state());
-    while(0==motor_rmd.get_motor_state());
-    while(0==motor_rmd.get_pid());
-    while(0==motor_rmd.get_angle_singleloop());
-    while(0==motor_rmd.get_angle_multiloop());
-    printf("motor ready\n\n");
 
     while(1)
     {
@@ -31,6 +25,7 @@ int main(int argc, char const *argv[])
             printf("get_pid: gpid\n");
             printf("set_pid: spid\n");
             printf("current_control: cc\n");
+            printf("torque_control: tc\n");
             printf("speed_control: sc\n");
             printf("angle_control: ac\n");
             printf("angle_control(max_speed): acs\n");
@@ -44,17 +39,13 @@ int main(int argc, char const *argv[])
         {
             printf("get_motor_state\n");
             motor_rmd.get_motor_state();
+            double angle = motor_rmd.get_angle();
+            double speed = motor_rmd.get_speed();
             printf("temperature: %d\n", motor_rmd.temperature);
-            printf("current: %d\n", motor_rmd.current);
-            printf("speed: %d\n", motor_rmd.speed);
             printf("encoder: %d\n", motor_rmd.encoder);
-            printf("\n");
-        }
-        else if(0==cmd.compare("gam"))
-        {
-            printf("get_angle_multiloop\n");
-            motor_rmd.get_angle_multiloop();
-            printf("angle_multiloop: %ld\n", motor_rmd.angle_multiloop);
+            printf("current: %d\n", motor_rmd.current);
+            printf("speed: %f\n", speed);
+            printf("angle: %f\n", angle);
             printf("\n");
         }
         else if(0==cmd.compare("gpid"))
@@ -94,13 +85,22 @@ int main(int argc, char const *argv[])
             motor_rmd.current_control(current_set);
             printf("\n");
         }
+        else if(0==cmd.compare("tc"))
+        {
+            int torque_set;
+            printf("torque_control\n");
+            printf("torque_set(): ");
+            std::cin>>torque_set;
+            motor_rmd.set_torque(torque_set);
+            printf("\n");
+        }
         else if(0==cmd.compare("sc"))
         {
             int speed_set;
             printf("speed_control\n");
-            printf("speed_set(0.01dps): ");
+            printf("speed_set(dps): ");
             std::cin>>speed_set;
-            motor_rmd.speed_control(speed_set);
+            motor_rmd.set_speed(speed_set);
             printf("\n");
         }
         else if(0==cmd.compare("ac"))
@@ -109,75 +109,21 @@ int main(int argc, char const *argv[])
             printf("angle_control\n");
             printf("angle_multiloop(d): ");
             std::cin>>angle_set;
-            angle_set *= 600;   //600 for x8
-            motor_rmd.angle_multiloop_control(angle_set);
+            motor_rmd.set_angle(angle_set);
             printf("\n");
         }
         else if(0==cmd.compare("acs"))
         {
             int set[2];
-            std::string str[2] = {"max_speed(dps): ",
-                                    "angle_multiloop(d): "};
+            std::string str[2] = {"angle_multiloop(d): ",
+                                    "max_speed(dps): "};
             printf("angle_multiloop_control(max_speed)\n");
             for(int i=0; i<2; i++)
             {
                 printf("%s", str[i].c_str());
                 std::cin>>set[i];
             }
-            set[1] *= 600;   //600 for x8
-            motor_rmd.angle_multiloop_control(set[0], set[1]);
-            printf("\n");
-        }
-        else if(0==cmd.compare("amc"))
-        {
-            int angle_set;
-            printf("angle_multiloop_control\n");
-            printf("angle_multiloop(0.01d): ");
-            std::cin>>angle_set;
-            motor_rmd.angle_multiloop_control(angle_set);
-            printf("\n");
-        }
-        else if(0==cmd.compare("amcs"))
-        {
-            int set[2];
-            std::string str[2] = {"max_speed(dps): ",
-                                    "angle_multiloop(0.01d): "};
-            printf("angle_multiloop_control(max_speed)\n");
-            for(int i=0; i<2; i++)
-            {
-                printf("%s", str[i].c_str());
-                std::cin>>set[i];
-            }
-            motor_rmd.angle_multiloop_control(set[0], set[1]);
-            printf("\n");
-        }
-        else if(0==cmd.compare("asc"))
-        {
-            int set[2];
-            std::string str[2] = {"direction(cw:0/1): ",
-                                    "angle_singleloop(0.01d): "};
-            printf("angle_singleloop_control\n");
-            for(int i=0; i<2; i++)
-            {
-                printf("%s", str[i].c_str());
-                std::cin>>set[i];
-            }
-            motor_rmd.angle_singleloop_control(set[0], set[1]);
-            printf("\n");
-        }
-        else if(0==cmd.compare("ascs"))
-        {
-            int set[3];
-            std::string str[3] = {"direction(cw:0/1): ",
-                                    "max_speed(1dps): ",
-                                    "angle_singleloop(0.01d): "};
-            printf("angle_singleloop_control(max_speed)\n");
-            for(int i=0; i<3; i++)
-            {
-                printf("%s", str[i].c_str());
-                std::cin>>set[i];
-            }
-            motor_rmd.angle_singleloop_control(set[0], set[1], set[2]);
+            motor_rmd.set_angle(set[0], set[1]);
             printf("\n");
         }
         else
@@ -185,6 +131,69 @@ int main(int argc, char const *argv[])
             printf("%s\n\n", cmd.c_str());
         }
     }
+}
+
+void test_m2006()
+{
+    int uart = uart_init(115200, (char*)"/dev/ttyACM0");
+    Motor_m2006 motor_m2006 = Motor_m2006(uart, 0, 1);
+    Motor_m2006 motor_m2006_ = Motor_m2006(uart, 1, 1);
+    m2006_start_update(&motor_m2006, &motor_m2006_);
+
+    while(1)
+    {
+        string cmd;
+        cin>>cmd;
+        if(0==cmd.compare("l"))
+        {
+            printf("get_angle: ga\n");
+            printf("\n");
+        }
+        else if(0==cmd.compare("ga"))
+        {
+            printf("get_angle\n");
+            double angle = motor_m2006.get_angle();
+            printf("angle: %f\n", angle);
+            printf("\n");
+        }
+        else if(0==cmd.compare("gs"))
+        {
+            printf("get_speed\n");
+            double speed = motor_m2006.get_speed();
+            printf("speed: %f\n", speed);
+            printf("\n");
+        }
+        else if(0==cmd.compare("gt"))
+        {
+            printf("get_torque\n");
+            double torque = motor_m2006.get_torque();
+            printf("torque: %f\n", torque);
+            printf("\n");
+        }
+        else if(0==cmd.compare("st"))
+        {
+            int torque_set;
+            printf("set_torque\n");
+            printf("torque_set(): ");
+            std::cin>>torque_set;
+            motor_m2006.set_torque(torque_set);
+            printf("\n");
+        }
+    }
+}
+
+int main(int argc, char const *argv[])
+{
+    // int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
+    // int uart2 = uart_init(115200, (char*)"/dev/ttyACM1");
+
+    // Motor_rmd motor_rmd = Motor_rmd(Can(uart1, 0, 0x141));
+    // Motor_m2006 motor_m2006_1 = Motor_m2006(uart2, 0, 1);
+    // Motor_m2006 motor_m2006_2 = Motor_m2006(uart2, 1, 1);
+    // m2006_start_update(&motor_m2006_1, &motor_m2006_2);
+
+    // test_rmd();
+    test_m2006();
 
     // clock_t start_time, end_time;
     // start_time = clock();

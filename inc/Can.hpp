@@ -15,11 +15,13 @@ private:
 
 public:
     int uart;
-    uint8_t can_port;
+    uint8_t can_port;   // 0/1
     uint32_t can_id;
 
     Can();
     Can(int uart, uint8_t can_port, uint32_t can_id);
+    ~Can();
+    
     int send(uint8_t can_data[8]);
     int recv(uint8_t recv_data[8]);
 };

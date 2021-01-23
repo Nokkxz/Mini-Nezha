@@ -6,6 +6,8 @@ class Motor_rmd
 {
 private:
     Can can;
+    int gear_ratio = 6;     // x8
+
 public:
     uint8_t angle_kp = 0;
     uint8_t angle_ki = 0;
@@ -27,7 +29,17 @@ public:
     uint16_t voltage = 0;       // 0.1 V/LSB
     uint8_t error_state = 0;
 
+    Motor_rmd();
     Motor_rmd(Can can);
+    ~Motor_rmd();
+
+    double get_torque();    // Nm
+    double get_speed();     // dps
+    double get_angle();     // d
+    int set_torque(double torque);      // Nm
+    int set_speed(double speed);        // dps
+    int set_angle(double angle, double speed);  // d,dps
+    int set_angle(double angle);        // d
 
     int get_pid();
     int set_pid(uint8_t angle_kp_set, uint8_t angle_ki_set,

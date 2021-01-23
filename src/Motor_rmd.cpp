@@ -7,9 +7,76 @@ namespace rmd
     uint8_t CTCLOCKWISE = 0x01;
 }
 
+Motor_rmd::Motor_rmd(){}
+
 Motor_rmd::Motor_rmd(Can can)
 {
     this->can = can;
+    while(0==this->get_error_state());
+    while(0==this->get_motor_state());
+    while(0==this->get_pid());
+    while(0==this->get_angle_singleloop());
+    while(0==this->get_angle_multiloop());
+    printf("motor ready\n\n");
+}
+
+Motor_rmd::~Motor_rmd(){}
+
+// TODO
+double Motor_rmd::get_torque()
+{
+    double torque;
+    this->get_motor_state();
+    torque = this->current;
+    return torque;
+}
+
+double Motor_rmd::get_speed()
+{
+    double speed;
+    this->get_motor_state();
+    speed = this->speed;
+    speed /= gear_ratio;
+    return speed;
+}
+
+double Motor_rmd::get_angle()
+{
+    double angle;
+    this->get_angle_multiloop();
+    angle = this->angle_multiloop;
+    angle /= gear_ratio*100;
+    return angle;
+}
+
+// TODO
+int Motor_rmd::set_torque(double torque)
+{
+    int16_t current;
+    current = torque;
+    this->current_control(current);
+    return 1;
+}
+
+int Motor_rmd::set_speed(double speed)
+{
+    speed *= gear_ratio*100;
+    this->speed_control(speed);
+}
+
+int Motor_rmd::set_angle(double angle, double speed)
+{
+    speed *= gear_ratio;
+    angle *= gear_ratio*100;
+    this->angle_multiloop_control(speed, angle);
+    return 1;
+}
+
+int Motor_rmd::set_angle(double angle)
+{
+    angle *= gear_ratio*100;
+    this->angle_multiloop_control(angle);
+    return 1;
 }
 
 int Motor_rmd::get_pid()

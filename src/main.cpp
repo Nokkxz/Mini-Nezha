@@ -8,11 +8,29 @@
 
 using namespace std;
 
+void test_rmd();
+void test_m2006();
+
+int main(int argc, char const *argv[])
+{
+    // int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
+    // int uart2 = uart_init(115200, (char*)"/dev/ttyACM1");
+
+    // Motor_rmd motor_rmd_1 = Motor_rmd(Can(uart1, 0, 1));
+    // Motor_rmd motor_rmd_2 = Motor_rmd(Can(uart1, 0, 2));
+    // Motor_m2006 motor_m2006_1 = Motor_m2006(uart2, 0, 1);
+    // Motor_m2006 motor_m2006_2 = Motor_m2006(uart2, 1, 2);
+    // m2006_start_update(&motor_m2006_1, &motor_m2006_2);
+
+    // test_rmd();
+    test_m2006();
+}
+
 void test_rmd()
 {
     int uart = uart_init(115200, (char*)"/dev/ttyACM0");
 
-    Motor_rmd motor_rmd = Motor_rmd(Can(uart, 0, 0x141));
+    Motor_rmd motor_rmd = Motor_rmd(Can(uart, 0, 1));
 
     while(1)
     {
@@ -180,36 +198,4 @@ void test_m2006()
             printf("\n");
         }
     }
-}
-
-int main(int argc, char const *argv[])
-{
-    // int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
-    // int uart2 = uart_init(115200, (char*)"/dev/ttyACM1");
-
-    // Motor_rmd motor_rmd = Motor_rmd(Can(uart1, 0, 0x141));
-    // Motor_m2006 motor_m2006_1 = Motor_m2006(uart2, 0, 1);
-    // Motor_m2006 motor_m2006_2 = Motor_m2006(uart2, 1, 1);
-    // m2006_start_update(&motor_m2006_1, &motor_m2006_2);
-
-    // test_rmd();
-    test_m2006();
-
-    // clock_t start_time, end_time;
-    // start_time = clock();
-    // int cnt = 0;
-
-    // while(1)
-    // {
-    //     end_time = clock();
-    //     if((end_time-start_time)>=CLOCKS_PER_SEC)
-    //     {
-    //         printf("%d\n",cnt);
-    //         cnt = 0;
-    //         start_time = end_time;
-    //     }
-
-    //     cnt += motor_rmd.get_motor_state();
-        
-    // }
 }

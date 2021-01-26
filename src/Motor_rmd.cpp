@@ -64,11 +64,11 @@ int Motor_rmd::set_speed(double speed)
     this->speed_control(speed);
 }
 
-int Motor_rmd::set_angle(double angle, double speed)
+int Motor_rmd::set_angle(double angle, double max_speed)
 {
     speed *= gear_ratio;
     angle *= gear_ratio*100;
-    this->angle_multiloop_control(speed, angle);
+    this->angle_multiloop_control(max_speed, angle);
     return 1;
 }
 

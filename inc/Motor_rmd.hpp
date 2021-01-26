@@ -33,12 +33,12 @@ public:
     Motor_rmd(Can can);
     ~Motor_rmd();
 
-    double get_torque();    // Nm
+    double get_torque();    // Nm //TODO
     double get_speed();     // dps
     double get_angle();     // d
-    int set_torque(double torque);      // Nm
+    int set_torque(double torque);      // Nm //TODO
     int set_speed(double speed);        // dps
-    int set_angle(double angle, double speed);  // d,dps
+    int set_angle(double angle, double max_speed);  // d,dps
     int set_angle(double angle);        // d
 
     int get_pid();

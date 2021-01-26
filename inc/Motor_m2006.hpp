@@ -21,10 +21,10 @@ public:
     Motor_m2006(int uart, uint8_t can_port, uint32_t can_id);
     ~Motor_m2006();
 
-    double get_torque();    // Nm
+    double get_torque();    // Nm //TODO
     double get_speed();     // dps
     double get_angle();     // 0~360
-    int set_torque(double torque);  // Nm
+    int set_torque(double torque);  // Nm //TODO
 };
 void m2006_start_update(Motor_m2006* m1, Motor_m2006* m2);
 void m2006_set_current(int16_t c, Motor_m2006* m);

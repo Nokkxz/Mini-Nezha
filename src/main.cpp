@@ -22,8 +22,6 @@ int main(int argc, char const *argv[])
     // Motor_m2006 motor_m2006_2 = Motor_m2006(uart2, 1, 2);
     // m2006_start_update(&motor_m2006_1, &motor_m2006_2);
 
-    // test_rmd();
-    test_m2006();
 }
 
 void test_rmd()

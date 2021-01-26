@@ -26,6 +26,7 @@ double Motor_m2006::get_torque()
     return torque;
 }
 
+//TODO
 double Motor_m2006::get_speed()
 {
     double speed;

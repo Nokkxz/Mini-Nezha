@@ -22,7 +22,7 @@ public:
     ~Motor_m2006();
 
     double get_torque();    // Nm //TODO
-    double get_speed();     // dps
+    double get_speed();     // dps //TODO
     double get_angle();     // 0~360
     int set_torque(double torque);  // Nm //TODO
 };

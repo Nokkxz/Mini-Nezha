@@ -8,14 +8,14 @@ Pid::Pid()
 
 Pid::Pid(float kp, float ki, float kd, float maxout)
 {
-    clear();
+    Clear();
     this->kp = kp;
     this->ki = ki;
     this->kd = kd;
     this->maxout = maxout;
 }
 
-float Pid::update(float ref, float fdb)
+float Pid::Update(float ref, float fdb)
 {
     e_buf[2] = e_buf[1];
     e_buf[1] = e_buf[0];
@@ -32,7 +32,7 @@ float Pid::update(float ref, float fdb)
     return out;
 }
 
-void Pid::clear()
+void Pid::Clear()
 {
     e_buf[0] = e_buf[1] = e_buf[2] = 0.0f;
     p_out = i_out = d_out = out = 0.0f;

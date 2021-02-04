@@ -6,7 +6,7 @@ Can::Can(int uart, uint8_t can_port, uint32_t can_id)
 {
     this->uart = uart;
     this->can_port = can_port;
-    this->can_id = can_id + 0x140;
+    this->can_id = can_id;
 }
 
 Can::~Can(){}

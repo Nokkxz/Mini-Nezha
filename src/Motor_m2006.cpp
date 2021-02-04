@@ -1,7 +1,4 @@
 #include "Motor_m2006.hpp"
-#include <fstream>
-#include <iostream>
-#include <string>
 
 static std::mutex uart_mut;
 static uint8_t s_buf[19];
@@ -19,7 +16,7 @@ Motor_m2006::Motor_m2006(int uart, uint8_t can_port, uint32_t can_id)
 Motor_m2006::~Motor_m2006(){}
 
 //TODO
-double Motor_m2006::get_torque()
+double Motor_m2006::GetTorque()
 {
     double torque;
     torque = this->current;
@@ -27,7 +24,7 @@ double Motor_m2006::get_torque()
 }
 
 //TODO
-double Motor_m2006::get_speed()
+double Motor_m2006::GetSpeed()
 {
     double speed;
     speed = this->speed;
@@ -35,13 +32,13 @@ double Motor_m2006::get_speed()
     return speed;
 }
 
-double Motor_m2006::get_angle()
+double Motor_m2006::GetAngle()
 {
     return this->angle;
 }
 
 //TODO
-int Motor_m2006::set_torque(double torque)
+int Motor_m2006::SetTorque(double torque)
 {
     int16_t current;
     current = torque;
@@ -102,6 +99,7 @@ void m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2)
     can_send(uart, can_id, can_port, can_data);
 }
 
+static int FIRSTRECV = 1;
 void can_recv(Motor_m2006* m1, Motor_m2006* m2)
 {
     uint32_t can_id;
@@ -114,6 +112,11 @@ void can_recv(Motor_m2006* m1, Motor_m2006* m2)
         case 0x10:  // USB2CAN send back
             break;
         case 0x02:  // CAN receive
+            if(FIRSTRECV)
+            {
+                printf("motor_m2006 ready\n\n");
+                FIRSTRECV = 0;
+            }
             can_port = r_buf[8];
             can_id = (uint32_t)r_buf[4]+((uint32_t)r_buf[5]<<8)
                         +((uint32_t)r_buf[6]<<16)+((uint32_t)r_buf[7]<<24);

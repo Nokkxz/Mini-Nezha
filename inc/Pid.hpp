@@ -14,8 +14,8 @@ public:
 
     Pid();
     Pid(float kp, float ki, float kd, float maxout);
-    float update(float ref, float fdb);
-    void clear();
+    float Update(float ref, float fdb);
+    void Clear();
 };
 
 #endif

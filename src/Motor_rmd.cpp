@@ -9,21 +9,25 @@ namespace rmd
 
 Motor_rmd::Motor_rmd(){}
 
-Motor_rmd::Motor_rmd(Can can)
+Motor_rmd::Motor_rmd(int uart, uint8_t can_port, uint32_t can_id)
 {
-    this->can = can;
+    this->can = new Can(uart, can_port, can_id + 0x140);
     while(0==this->get_error_state());
     while(0==this->get_motor_state());
     while(0==this->get_pid());
     while(0==this->get_angle_singleloop());
     while(0==this->get_angle_multiloop());
-    printf("motor ready\n\n");
+    angle_offset = this->angle_multiloop;
+    printf("motor_rmd ready(%ld)\n\n", angle_offset);
 }
 
-Motor_rmd::~Motor_rmd(){}
+Motor_rmd::~Motor_rmd()
+{
+    can->~Can();
+}
 
 // TODO
-double Motor_rmd::get_torque()
+double Motor_rmd::GetTorque()
 {
     double torque;
     this->get_motor_state();
@@ -31,7 +35,7 @@ double Motor_rmd::get_torque()
     return torque;
 }
 
-double Motor_rmd::get_speed()
+double Motor_rmd::GetSpeed()
 {
     double speed;
     this->get_motor_state();
@@ -40,17 +44,17 @@ double Motor_rmd::get_speed()
     return speed;
 }
 
-double Motor_rmd::get_angle()
+double Motor_rmd::GetAngle()
 {
     double angle;
     this->get_angle_multiloop();
-    angle = this->angle_multiloop;
-    angle /= gear_ratio*100;
+    angle = (double)(this->angle_multiloop - this->angle_offset);
+    angle /= (gear_ratio*100);
     return angle;
 }
 
 // TODO
-int Motor_rmd::set_torque(double torque)
+int Motor_rmd::SetTorque(double torque)
 {
     int16_t current;
     current = torque;
@@ -58,21 +62,22 @@ int Motor_rmd::set_torque(double torque)
     return 1;
 }
 
-int Motor_rmd::set_speed(double speed)
+int Motor_rmd::SetSpeed(double speed)
 {
     speed *= gear_ratio*100;
     this->speed_control(speed);
 }
 
-int Motor_rmd::set_angle(double angle, double max_speed)
+int Motor_rmd::SetAngle(double angle, double maxSpeed)
 {
     speed *= gear_ratio;
-    angle *= gear_ratio*100;
-    this->angle_multiloop_control(max_speed, angle);
+    angle = angle*gear_ratio*100 + angle_offset;
+    angle = (int32_t)angle;
+    this->angle_multiloop_control(maxSpeed, angle);
     return 1;
 }
 
-int Motor_rmd::set_angle(double angle)
+int Motor_rmd::SetAngle(double angle)
 {
     angle *= gear_ratio*100;
     this->angle_multiloop_control(angle);
@@ -83,8 +88,8 @@ int Motor_rmd::get_pid()
 {
     uint8_t can_cmd = 0x30;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         angle_kp = recv_data[2];
@@ -110,8 +115,8 @@ int Motor_rmd::set_pid(uint8_t angle_kp_set, uint8_t angle_ki_set,
     uint8_t can_data[8] = {can_cmd,0,angle_kp_set,angle_ki_set,
                                 speed_kp_set,speed_ki_set,
                                 current_kp_set,current_ki_set};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         angle_kp = angle_kp_set;
@@ -136,8 +141,8 @@ int Motor_rmd::set_pid_rom(uint8_t angle_kp_set, uint8_t angle_ki_set,
     uint8_t can_data[8] = {can_cmd,0,angle_kp_set,angle_ki_set,
                                 speed_kp_set,speed_ki_set,
                                 current_kp_set,current_ki_set};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         return 1;
@@ -152,8 +157,8 @@ int Motor_rmd::set_encoder_offset_rom()
 {
     uint8_t can_cmd = 0x19;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         encoder_offset = (uint16_t)recv_data[6]+((uint16_t)recv_data[7]<<8);
@@ -169,15 +174,11 @@ int Motor_rmd::get_angle_multiloop()
 {
     uint8_t can_cmd = 0x92;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
-        angle_multiloop = 0;
-        for(int i=1; i<8; i++)
-        {
-            angle_multiloop += (uint64_t)recv_data[i]<<(i*8-8);
-        }
+        angle_multiloop = (*((int64_t*)(recv_data)))>>8;
         return 1;
     }
     else
@@ -190,8 +191,8 @@ int Motor_rmd::get_angle_singleloop()
 {
     uint8_t can_cmd = 0x94;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         angle_singleloop = (uint16_t)recv_data[6]+((uint16_t)recv_data[7]<<8);
@@ -207,8 +208,8 @@ int Motor_rmd::get_error_state()
 {
     uint8_t can_cmd = 0x9A;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -226,8 +227,8 @@ int Motor_rmd::get_motor_state()
 {
     uint8_t can_cmd = 0x9C;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -246,8 +247,8 @@ int Motor_rmd::shut_motor()
 {
     uint8_t can_cmd = 0x80;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         return 1;
@@ -262,8 +263,8 @@ int Motor_rmd::pause_motor()
 {
     uint8_t can_cmd = 0x81;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         return 1;
@@ -278,8 +279,8 @@ int Motor_rmd::resume_motor()
 {
     uint8_t can_cmd = 0x88;
     uint8_t can_data[8] = {can_cmd,0,0,0,0,0,0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         return 1;
@@ -296,8 +297,8 @@ int Motor_rmd::current_control(int16_t current_set)
     uint8_t can_cmd = 0xA1;
     uint8_t can_data[8] = {can_cmd,0,0,0,
                         (uint8_t)current_set,(uint8_t)(current_set>>8),0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -318,8 +319,8 @@ int Motor_rmd::speed_control(int32_t speed_set)
     uint8_t can_data[8] = {can_cmd,0,0,0,
                         (uint8_t)speed_set,(uint8_t)(speed_set>>8),
                         (uint8_t)(speed_set>>16),(uint8_t)(speed_set>>24)};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -340,8 +341,8 @@ int Motor_rmd::angle_multiloop_control(int32_t angle_multiloop_set)
     uint8_t can_data[8] = {can_cmd,0,0,0,
                         (uint8_t)angle_multiloop_set,(uint8_t)(angle_multiloop_set>>8),
                         (uint8_t)(angle_multiloop_set>>16),(uint8_t)(angle_multiloop_set>>24)};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -362,8 +363,8 @@ int Motor_rmd::angle_multiloop_control(uint16_t max_speed, int32_t angle_multilo
     uint8_t can_data[8] = {can_cmd,0,(uint8_t)max_speed,(uint8_t)(max_speed>>8),
                         (uint8_t)angle_multiloop_set,(uint8_t)(angle_multiloop_set>>8),
                         (uint8_t)(angle_multiloop_set>>16),(uint8_t)(angle_multiloop_set>>24)};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -383,8 +384,8 @@ int Motor_rmd::angle_singleloop_control(uint8_t direction, uint16_t angle_single
     uint8_t can_cmd = 0xA5;
     uint8_t can_data[8] = {can_cmd,direction,0,0,
                         (uint8_t)angle_singleloop_set,(uint8_t)(angle_singleloop_set>>8),0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];
@@ -405,8 +406,8 @@ int Motor_rmd::angle_singleloop_control(uint8_t direction, uint16_t max_speed, u
     
     uint8_t can_data[8] = {can_cmd,direction,(uint8_t)max_speed,(uint8_t)(max_speed>>8),
                         (uint8_t)angle_singleloop_set,(uint8_t)(angle_singleloop_set>>8),0,0};
-    can.send(can_data);
-    can.recv(recv_data);
+    can->send(can_data);
+    can->recv(recv_data);
     if(recv_data[0]==can_cmd)
     {
         temperature = recv_data[1];

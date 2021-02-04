@@ -1,10 +1,14 @@
-#ifndef __MOTOR_m2006_HPP__
-#define __MOTOR_m2006_HPP__
+#ifndef __MOTOR_M2006_HPP__
+#define __MOTOR_M2006_HPP__
 #include "Can.hpp"
+#include "Motor.hpp"
 #include <thread>
 #include <mutex>
+#include <fstream>
+#include <iostream>
+#include <string>
 
-class Motor_m2006
+class Motor_m2006 : public Motor
 {
 private:
     double gear_ratio = 1;
@@ -21,11 +25,12 @@ public:
     Motor_m2006(int uart, uint8_t can_port, uint32_t can_id);
     ~Motor_m2006();
 
-    double get_torque();    // Nm //TODO
-    double get_speed();     // dps //TODO
-    double get_angle();     // 0~360
-    int set_torque(double torque);  // Nm //TODO
+    double GetTorque();    // Nm //TODO
+    double GetSpeed();     // dps //TODO
+    double GetAngle();     // 0~360
+    int SetTorque(double torque);  // Nm //TODO
 };
+
 void m2006_start_update(Motor_m2006* m1, Motor_m2006* m2);
 void m2006_set_current(int16_t c, Motor_m2006* m);
 void m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2);

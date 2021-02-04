@@ -1,34 +1,106 @@
-#include "uart.hpp"
-#include "Can.hpp"
-#include "Motor_rmd.hpp"
-#include "Motor_m2006.hpp"
 #include <time.h>
 #include <iostream>
 #include <string>
+#include "uart.hpp"
+#include "Can.hpp"
+#include "Motor.hpp"
+#include "Motor_rmd.hpp"
+#include "Motor_m2006.hpp"
+#include "Pid.hpp"
+#include "Robot.hpp"
+#include "RestState.hpp"
+#include "StandState.hpp"
 
 using namespace std;
 
 void test_rmd();
 void test_m2006();
+void test_imu();
+
+void test_2motor()
+{
+    int uart2 = uart_init(115200, (char*)"/dev/ttyACM0");
+    Motor_m2006 motor_m2006 = Motor_m2006(uart2, 0, 1);
+    m2006_start_update(&motor_m2006, &motor_m2006);
+
+    int uart1 = uart_init(115200, (char*)"/dev/ttyACM1");
+    Motor_rmd motor_rmd = Motor_rmd(uart1, 0, 1);
+
+    string cmd;
+    while(1)
+    {
+        cin>>cmd;
+        if(0==cmd.compare("ga"))
+        {
+            printf("%f\n", motor_rmd.GetAngle());
+            printf("%f\n", motor_m2006.GetAngle());
+            printf("\n");
+        }
+        if(0==cmd.compare("test"))
+        {
+            double angle;
+            cin>>angle;
+            motor_rmd.SetAngle(angle,50);
+            printf("\n");
+        }
+        if(0==cmd.compare("rest"))
+        {
+            motor_rmd.SetTorque(0);
+            printf("\n");
+        }
+    }
+}
 
 int main(int argc, char const *argv[])
 {
+    test_2motor();
     // int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
     // int uart2 = uart_init(115200, (char*)"/dev/ttyACM1");
+    // int uart3 = uart_init(115200, (char*)"/dev/ttyACM2");
 
-    // Motor_rmd motor_rmd_1 = Motor_rmd(Can(uart1, 0, 1));
-    // Motor_rmd motor_rmd_2 = Motor_rmd(Can(uart1, 0, 2));
-    // Motor_m2006 motor_m2006_1 = Motor_m2006(uart2, 0, 1);
-    // Motor_m2006 motor_m2006_2 = Motor_m2006(uart2, 1, 2);
-    // m2006_start_update(&motor_m2006_1, &motor_m2006_2);
+    // Motor_rmd hip_L = Motor_rmd(Can(uart1, 0, 1));
+    // Motor_rmd hip_R = Motor_rmd(Can(uart1, 0, 2));
+    // Motor_rmd knee_L = Motor_rmd(Can(uart1, 0, 3));
+    // Motor_rmd knee_R = Motor_rmd(Can(uart1, 0, 4));
 
+    // Motor_m2006 wheel_L = Motor_m2006(uart2, 0, 1);
+    // Motor_m2006 wheel_R = Motor_m2006(uart2, 1, 2);
+    // m2006_start_update(&wheel_L, &wheel_R);
+
+    // Imu imu = Imu(uart3);
+    // imu_start_update(&imu);
+
+    // Robot robot = Robot(imu, hip_L, hip_R, knee_L, knee_R, wheel_L, wheel_R);
+
+    // RestState restState = RestState();
+    // StandState standState = StandState();
+
+    // robot.SetCurState(&restState);
+
+    // string cmd;
+    // cin>>cmd;
+    // if(0==cmd.compare("s"))
+    // {
+    //     robot.ChangeState(&standState);
+    //     while(1)
+    //     {
+    //         robot.Update();
+    //     }
+    // }
+}
+
+void test_imu()
+{
+    int uart = uart_init(115200, (char*)"/dev/ttyACM0");
+    Imu imu = Imu(uart);
+    imu_start_update(&imu);
 }
 
 void test_rmd()
 {
     int uart = uart_init(115200, (char*)"/dev/ttyACM0");
 
-    Motor_rmd motor_rmd = Motor_rmd(Can(uart, 0, 1));
+    Motor_rmd motor_rmd = Motor_rmd(uart, 0, 1);
 
     while(1)
     {
@@ -55,8 +127,8 @@ void test_rmd()
         {
             printf("get_motor_state\n");
             motor_rmd.get_motor_state();
-            double angle = motor_rmd.get_angle();
-            double speed = motor_rmd.get_speed();
+            double angle = motor_rmd.GetAngle();
+            double speed = motor_rmd.GetSpeed();
             printf("temperature: %d\n", motor_rmd.temperature);
             printf("encoder: %d\n", motor_rmd.encoder);
             printf("current: %d\n", motor_rmd.current);
@@ -107,7 +179,7 @@ void test_rmd()
             printf("torque_control\n");
             printf("torque_set(): ");
             std::cin>>torque_set;
-            motor_rmd.set_torque(torque_set);
+            motor_rmd.SetTorque(torque_set);
             printf("\n");
         }
         else if(0==cmd.compare("sc"))
@@ -116,7 +188,7 @@ void test_rmd()
             printf("speed_control\n");
             printf("speed_set(dps): ");
             std::cin>>speed_set;
-            motor_rmd.set_speed(speed_set);
+            motor_rmd.SetSpeed(speed_set);
             printf("\n");
         }
         else if(0==cmd.compare("ac"))
@@ -125,7 +197,7 @@ void test_rmd()
             printf("angle_control\n");
             printf("angle_multiloop(d): ");
             std::cin>>angle_set;
-            motor_rmd.set_angle(angle_set);
+            motor_rmd.SetAngle(angle_set);
             printf("\n");
         }
         else if(0==cmd.compare("acs"))
@@ -139,7 +211,7 @@ void test_rmd()
                 printf("%s", str[i].c_str());
                 std::cin>>set[i];
             }
-            motor_rmd.set_angle(set[0], set[1]);
+            motor_rmd.SetAngle(set[0], set[1]);
             printf("\n");
         }
         else
@@ -168,21 +240,21 @@ void test_m2006()
         else if(0==cmd.compare("ga"))
         {
             printf("get_angle\n");
-            double angle = motor_m2006.get_angle();
+            double angle = motor_m2006.GetAngle();
             printf("angle: %f\n", angle);
             printf("\n");
         }
         else if(0==cmd.compare("gs"))
         {
             printf("get_speed\n");
-            double speed = motor_m2006.get_speed();
+            double speed = motor_m2006.GetSpeed();
             printf("speed: %f\n", speed);
             printf("\n");
         }
         else if(0==cmd.compare("gt"))
         {
             printf("get_torque\n");
-            double torque = motor_m2006.get_torque();
+            double torque = motor_m2006.GetTorque();
             printf("torque: %f\n", torque);
             printf("\n");
         }
@@ -192,7 +264,7 @@ void test_m2006()
             printf("set_torque\n");
             printf("torque_set(): ");
             std::cin>>torque_set;
-            motor_m2006.set_torque(torque_set);
+            motor_m2006.SetTorque(torque_set);
             printf("\n");
         }
     }

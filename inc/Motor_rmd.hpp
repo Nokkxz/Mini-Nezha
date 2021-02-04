@@ -1,13 +1,14 @@
 #ifndef __MOTOR_RMD_HPP__
 #define __MOTOR_RMD_HPP__
 #include "Can.hpp"
+#include "Motor.hpp"
 
-class Motor_rmd
+class Motor_rmd : public Motor
 {
 private:
-    Can can;
+    Can* can;
     int gear_ratio = 6;     // x8
-
+    int64_t angle_offset = 0;
 public:
     uint8_t angle_kp = 0;
     uint8_t angle_ki = 0;
@@ -18,7 +19,7 @@ public:
 
     uint16_t encoder_offset = 0;
 
-    uint64_t angle_multiloop = 0;   // +: clockwise (0.01 degree/LSB)
+    int64_t angle_multiloop = 0;   // +: clockwise (0.01 degree/LSB)
     uint16_t angle_singleloop = 0;  // 0 ~ 35999 (0.01 degree/LSB)
 
     int16_t current = 0;    // -2048 ~ 2048 : -33A ~ 33A
@@ -30,16 +31,16 @@ public:
     uint8_t error_state = 0;
 
     Motor_rmd();
-    Motor_rmd(Can can);
+    Motor_rmd(int uart, uint8_t can_port, uint32_t can_id);
     ~Motor_rmd();
 
-    double get_torque();    // Nm //TODO
-    double get_speed();     // dps
-    double get_angle();     // d
-    int set_torque(double torque);      // Nm //TODO
-    int set_speed(double speed);        // dps
-    int set_angle(double angle, double max_speed);  // d,dps
-    int set_angle(double angle);        // d
+    double GetTorque();    // Nm //TODO
+    double GetSpeed();     // dps
+    double GetAngle();     // d
+    int SetTorque(double torque);      // Nm //TODO
+    int SetSpeed(double speed);        // dps
+    int SetAngle(double angle, double maxSpeed);  // d,dps
+    int SetAngle(double angle);        // d
 
     int get_pid();
     int set_pid(uint8_t angle_kp_set, uint8_t angle_ki_set,

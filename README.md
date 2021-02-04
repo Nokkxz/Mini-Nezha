@@ -26,11 +26,11 @@ Robot类同时作为StateMachine，包含当前状态CurState，实现了Update�
 State为模板类，每个状态都继承于State，需要实现Enter、Exit函数（进出状态时执行的函数，Robot::ChangeState中调用）和Execute函数（状态中执行的函数，Robot::Update中执行）。
 
 ## 安装教程
-1.  git clone “https://gitee.com/nokk/mini-nezha.git”  
-2.  mkdir build & cd build  
-3.  cmake ..  
+1.  git clone “https://gitee.com/nokk/mini-nezha.git”
+2.  mkdir build & cd build
+3.  cmake ..
 4.  sudo code --user-data-dir ="~/.vscode-root"（root权限打开vscode，并打开mini-nezha文件夹）
 5.  F5编译并运行
 
 ## 使用说明
-1.  Motor_rmd还实现了其他不常用的函数（如更改pid，设置编码器零点，获得单圈角度等），未进行进一步封装，详见光毓电机文档。  
+1.  Motor_rmd还实现了其他不常用的函数（如更改pid，设置编码器零点，获得单圈角度等），未进行进一步封装，详见光毓电机文档。

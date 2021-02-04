@@ -10,7 +10,7 @@ rmd_x8pro和m2006两种电机各使用一个USB口，通过USB转can模块与电
 1个IMU使用一个USB口与上位机通信。
 
 ## 软件架构
-### Motor：
+### Motor
 #### Motor_rmd：
 光毓x8pro电机为单线程阻塞式通信（电调接收到一帧can消息后返回一帧）：  
 Motor_rmd类调用组合的Can实例进行包的转义与收发。  
@@ -19,11 +19,15 @@ Motor_rmd类继承模板类Motor，实现函数GetTorque/Speed/Angle, SetTorque/
 大疆m2006电机为多线程通信（电调以1kHz的频率发送信息）：  
 Motor_m2006通过收、发两个线程完成通信。  
 Motor_m2006类继承模板类Motor，实现函数GetTorque/Speed/Angle, SetTorque。
-### Robot：
+### Robot
 Robot类中包含hip/knee/wheel_L/R共6个电机，1个IMU。  
 Robot类同时作为StateMachine，包含当前状态CurState，实现了Update、ChangeState函数。
-### State：
+### State
 State为模板类，每个状态都继承于State，需要实现Enter、Exit函数（进出状态时执行的函数，Robot::ChangeState中调用）和Execute函数（状态中执行的函数，Robot::Update中执行）。
+#### RestState：
+RestState中，机器人所有电机力矩设为0。
+#### StandState：
+StandState中，机器人hip、knee关节通过位置控制固定，通过pid控制wheel电机让机器人保持站立。
 
 ## 安装教程
 1.  git clone “https://gitee.com/nokk/mini-nezha.git”

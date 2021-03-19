@@ -5,6 +5,7 @@ Mini-Nezha控制代码
 
 ## 硬件架构
 ### 电机：
+2个m2006电机驱动轮子，4个rmd_xpro电机驱动2个knee关节和2个hip关节。
 rmd_x8pro和m2006两种电机各使用一个USB口，通过USB转can模块与电调通信。
 ### IMU：
 1个IMU使用一个USB口与上位机通信。

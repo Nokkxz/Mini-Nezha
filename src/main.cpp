@@ -19,12 +19,13 @@ void test_imu();
 
 void test_2motor()
 {
-    int uart2 = uart_init(115200, (char*)"/dev/ttyACM0");
-    Motor_m2006 motor_m2006 = Motor_m2006(uart2, 0, 1);
-    m2006_start_update(&motor_m2006, &motor_m2006);
+    // int uart2 = uart_init(115200, (char*)"/dev/ttyACM0");
+    // Motor_m2006 motor_m2006 = Motor_m2006(uart2, 0, 1);
+    // m2006_start_update(&motor_m2006, &motor_m2006);
 
-    int uart1 = uart_init(115200, (char*)"/dev/ttyACM1");
-    Motor_rmd motor_rmd = Motor_rmd(uart1, 0, 1);
+    int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
+    Motor_rmd motor_rmd1 = Motor_rmd(uart1, 0, 1);
+    Motor_rmd motor_rmd2 = Motor_rmd(uart1, 0, 2);
 
     string cmd;
     while(1)
@@ -32,20 +33,44 @@ void test_2motor()
         cin>>cmd;
         if(0==cmd.compare("ga"))
         {
-            printf("%f\n", motor_rmd.GetAngle());
-            printf("%f\n", motor_m2006.GetAngle());
+            printf("%f\n", motor_rmd1.GetAngle());
+            printf("%f\n", motor_rmd2.GetAngle());
             printf("\n");
         }
-        if(0==cmd.compare("test"))
+        if(0==cmd.compare("sa1"))
         {
             double angle;
             cin>>angle;
-            motor_rmd.SetAngle(angle,50);
+            motor_rmd1.SetAngle(angle,100);
             printf("\n");
         }
-        if(0==cmd.compare("rest"))
+        if(0==cmd.compare("sa2"))
         {
-            motor_rmd.SetTorque(0);
+            double angle;
+            cin>>angle;
+            motor_rmd2.SetAngle(angle,100);
+            printf("\n");
+        }
+        if(0==cmd.compare("sa3"))
+        {
+            double angle1, angle2;
+            cin>>angle1;
+            cin>>angle2;
+            motor_rmd1.SetAngle(angle1,100);
+            motor_rmd2.SetAngle(angle2,100);
+            printf("\n");
+        }
+        if(0==cmd.compare("r"))
+        {
+            motor_rmd1.SetTorque(0);
+            motor_rmd2.SetTorque(0);
+            printf("\n");
+        }
+        if(0==cmd.compare("st2"))
+        {
+            double torque;
+            cin>>torque;
+            motor_rmd2.SetTorque(torque);
             printf("\n");
         }
     }

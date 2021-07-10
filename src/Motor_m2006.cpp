@@ -120,7 +120,6 @@ void can_recv(Motor_m2006* m1, Motor_m2006* m2)
             can_port = r_buf[8];
             can_id = (uint32_t)r_buf[4]+((uint32_t)r_buf[5]<<8)
                         +((uint32_t)r_buf[6]<<16)+((uint32_t)r_buf[7]<<24);
-            can_id -= 0x200;
             for(int i=0; i<8; i++)
             {
                 can_data[i] = r_buf[i+10];
@@ -131,16 +130,18 @@ void can_recv(Motor_m2006* m1, Motor_m2006* m2)
         }
     }
 
+    uint32_t motor_id = can_id - 0x200;
+
     uint16_t angle = ((uint16_t)can_data[0]<<8) + can_data[1];
     int16_t speed = ((int16_t)can_data[2]<<8) + can_data[3];
     int16_t current = ((int16_t)can_data[4]<<8) + can_data[5];
-    if(can_port == m1->can_port && can_id == m1->can_id)
+    if(can_port == m1->can_port && motor_id == m1->can_id)
     {
         m1->angle = (double)angle *360/8191 ;
         m1->speed = speed;
         m1->current = current;
     }
-    else if(can_port == m2->can_port && can_id == m2->can_id)
+    else if(can_port == m2->can_port && motor_id == m2->can_id)
     {
         m2->angle = (double)angle *360/8191 ;
         m2->speed = speed;

@@ -6,6 +6,7 @@
 #include "Motor.hpp"
 #include "Motor_rmd.hpp"
 #include "Motor_m2006.hpp"
+#include "Motor_ak80.hpp"
 #include "Pid.hpp"
 #include "Robot.hpp"
 #include "RestState.hpp"
@@ -16,6 +17,89 @@ using namespace std;
 void test_rmd();
 void test_m2006();
 void test_imu();
+void test_2motor();
+void test_ak80();
+
+int main(int argc, char const *argv[])
+{
+    test_ak80();
+    // int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
+    // int uart2 = uart_init(115200, (char*)"/dev/ttyACM1");
+    // int uart3 = uart_init(115200, (char*)"/dev/ttyACM2");
+
+    // Motor_rmd hip_L = Motor_rmd(Can(uart1, 0, 1));
+    // Motor_rmd hip_R = Motor_rmd(Can(uart1, 0, 2));
+    // Motor_rmd knee_L = Motor_rmd(Can(uart1, 0, 3));
+    // Motor_rmd knee_R = Motor_rmd(Can(uart1, 0, 4));
+
+    // Motor_m2006 wheel_L = Motor_m2006(uart2, 0, 1);
+    // Motor_m2006 wheel_R = Motor_m2006(uart2, 1, 2);
+    // m2006_start_update(&wheel_L, &wheel_R);
+
+    // Imu imu = Imu(uart3);
+    // imu_start_update(&imu);
+
+    // Robot robot = Robot(imu, hip_L, hip_R, knee_L, knee_R, wheel_L, wheel_R);
+
+    // RestState restState = RestState();
+    // StandState standState = StandState();
+
+    // robot.SetCurState(&restState);
+
+    // string cmd;
+    // cin>>cmd;
+    // if(0==cmd.compare("s"))
+    // {
+    //     robot.ChangeState(&standState);
+    //     while(1)
+    //     {
+    //         robot.Update();
+    //     }
+    // }
+}
+
+void test_ak80()
+{
+    int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
+    Motor_ak80 m1 = Motor_ak80(uart1, 0, 1);
+
+    string cmd;
+    while(1)
+    {
+        cin>>cmd;
+        if(0==cmd.compare("ga"))
+        {
+            printf("%f\n", m1.GetAngle());
+            printf("\n");
+        }
+        if(0==cmd.compare("sa"))
+        {
+            double angle;
+            cin>>angle;
+            m1.SetAngle(angle);
+            printf("\n");
+        }
+        if(0==cmd.compare("ss"))
+        {
+            double speed;
+            cin>>speed;
+            m1.SetSpeed(speed);
+            printf("\n");
+        }
+        if(0==cmd.compare("st"))
+        {
+            double torque;
+            cin>>torque;
+            m1.SetAngle(torque);
+            printf("\n");
+        }
+        if(0==cmd.compare("sz"))
+        {
+            m1.SendZeroCmd();
+            printf("\n");
+        }
+    }
+}
 
 void test_2motor()
 {
@@ -24,8 +108,8 @@ void test_2motor()
     // m2006_start_update(&motor_m2006, &motor_m2006);
 
     int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
-    Motor_rmd motor_rmd1 = Motor_rmd(uart1, 0, 1);
-    Motor_rmd motor_rmd2 = Motor_rmd(uart1, 0, 2);
+    Motor motor_rmd1 = Motor_rmd(uart1, 0, 1);
+    Motor motor_rmd2 = Motor_rmd(uart1, 0, 2);
 
     string cmd;
     while(1)
@@ -74,44 +158,6 @@ void test_2motor()
             printf("\n");
         }
     }
-}
-
-int main(int argc, char const *argv[])
-{
-    test_2motor();
-    // int uart1 = uart_init(115200, (char*)"/dev/ttyACM0");
-    // int uart2 = uart_init(115200, (char*)"/dev/ttyACM1");
-    // int uart3 = uart_init(115200, (char*)"/dev/ttyACM2");
-
-    // Motor_rmd hip_L = Motor_rmd(Can(uart1, 0, 1));
-    // Motor_rmd hip_R = Motor_rmd(Can(uart1, 0, 2));
-    // Motor_rmd knee_L = Motor_rmd(Can(uart1, 0, 3));
-    // Motor_rmd knee_R = Motor_rmd(Can(uart1, 0, 4));
-
-    // Motor_m2006 wheel_L = Motor_m2006(uart2, 0, 1);
-    // Motor_m2006 wheel_R = Motor_m2006(uart2, 1, 2);
-    // m2006_start_update(&wheel_L, &wheel_R);
-
-    // Imu imu = Imu(uart3);
-    // imu_start_update(&imu);
-
-    // Robot robot = Robot(imu, hip_L, hip_R, knee_L, knee_R, wheel_L, wheel_R);
-
-    // RestState restState = RestState();
-    // StandState standState = StandState();
-
-    // robot.SetCurState(&restState);
-
-    // string cmd;
-    // cin>>cmd;
-    // if(0==cmd.compare("s"))
-    // {
-    //     robot.ChangeState(&standState);
-    //     while(1)
-    //     {
-    //         robot.Update();
-    //     }
-    // }
 }
 
 void test_imu()
@@ -251,7 +297,7 @@ void test_m2006()
     int uart = uart_init(115200, (char*)"/dev/ttyACM0");
     Motor_m2006 motor_m2006 = Motor_m2006(uart, 0, 1);
     Motor_m2006 motor_m2006_ = Motor_m2006(uart, 1, 1);
-    m2006_start_update(&motor_m2006, &motor_m2006_);
+    motor_m2006_start_update(&motor_m2006, &motor_m2006_);
 
     while(1)
     {

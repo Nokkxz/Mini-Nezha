@@ -42,10 +42,10 @@ int Motor_m2006::SetTorque(double torque)
 {
     int16_t current;
     current = torque;
-    m2006_set_current(current, this);
+    motor_m2006_set_current(current, this);
 }
 
-void uart_send_thread(int uart)
+void motor_m2006_uart_send_thread(int uart)
 {
     int s_len;
     uart_mut.lock();
@@ -53,7 +53,7 @@ void uart_send_thread(int uart)
     uart_mut.unlock();
 }
 
-void can_send(int uart, uint32_t can_id, uint8_t can_port, uint8_t can_data[8])
+void motor_m2006_can_send(int uart, uint32_t can_id, uint8_t can_port, uint8_t can_data[8])
 {
     s_buf[0] = 0x55;                // frame header
     s_buf[1] = 0x00;                // cmd
@@ -71,11 +71,11 @@ void can_send(int uart, uint32_t can_id, uint8_t can_port, uint8_t can_data[8])
     }
     s_buf[18] = 0xaa;               // frame end
 
-    std::thread uart_send_t(uart_send_thread, uart);
+    std::thread uart_send_t(motor_m2006_uart_send_thread, uart);
     uart_send_t.detach();
 }
 
-void m2006_set_current(int16_t c, Motor_m2006* m)
+void motor_m2006_set_current(int16_t c, Motor_m2006* m)
 {
     int uart = m->uart;
     uint32_t can_id = 0x200;
@@ -83,10 +83,10 @@ void m2006_set_current(int16_t c, Motor_m2006* m)
     uint8_t can_data[8] = {0};
     can_data[(m->can_id-1)*2+1] = (uint8_t)c;
     can_data[(m->can_id-1)*2] = (uint8_t)(c>>8);
-    can_send(uart, can_id, can_port, can_data);
+    motor_m2006_can_send(uart, can_id, can_port, can_data);
 }
 
-void m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2)
+void motor_m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2)
 {
     int uart = m1->uart;
     uint32_t can_id = 0x200;
@@ -96,11 +96,11 @@ void m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2)
     can_data[(m1->can_id-1)*2] = (uint8_t)(c1>>8);
     can_data[(m2->can_id-1)*2+1] = (uint8_t)c2;
     can_data[(m2->can_id-1)*2] = (uint8_t)(c2>>8);
-    can_send(uart, can_id, can_port, can_data);
+    motor_m2006_can_send(uart, can_id, can_port, can_data);
 }
 
 static int FIRSTRECV = 1;
-void can_recv(Motor_m2006* m1, Motor_m2006* m2)
+void motor_m2006_can_recv(Motor_m2006* m1, Motor_m2006* m2)
 {
     uint32_t can_id;
     uint8_t can_port;
@@ -149,7 +149,7 @@ void can_recv(Motor_m2006* m1, Motor_m2006* m2)
     }
 }
 
-void uart_recv_thread(Motor_m2006* m1, Motor_m2006* m2)
+void motor_m2006_uart_recv_thread(Motor_m2006* m1, Motor_m2006* m2)
 {
     int uart = m1->uart;
     int r_len;
@@ -162,13 +162,13 @@ void uart_recv_thread(Motor_m2006* m1, Motor_m2006* m2)
         uart_mut.unlock();
         if(r_len > 0)
         {
-            can_recv(m1, m2);
+            motor_m2006_can_recv(m1, m2);
         }
     }
 }
 
-void m2006_start_update(Motor_m2006* m1, Motor_m2006* m2)
+void motor_m2006_start_update(Motor_m2006* m1, Motor_m2006* m2)
 {
-    std::thread motor_recv_t(uart_recv_thread, m1, m2);
+    std::thread motor_recv_t(motor_m2006_uart_recv_thread, m1, m2);
     motor_recv_t.detach();
 }

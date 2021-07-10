@@ -9,8 +9,8 @@ public:
     virtual double GetAngle(){}
 
     virtual int SetTorque(double torque){}
-    virtual int SetSpeed(double torque){}
-    virtual int SetAngle(double torque){}
+    virtual int SetSpeed(double speed){}
+    virtual int SetAngle(double angle){}
     virtual int SetAngle(double angle, double maxSpeed){}
 };
 

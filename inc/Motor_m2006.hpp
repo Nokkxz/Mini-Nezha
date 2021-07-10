@@ -31,9 +31,9 @@ public:
     int SetTorque(double torque);  // Nm //TODO
 };
 
-void m2006_start_update(Motor_m2006* m1, Motor_m2006* m2);
-void m2006_set_current(int16_t c, Motor_m2006* m);
-void m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2);
+void motor_m2006_start_update(Motor_m2006* m1, Motor_m2006* m2);
+void motor_m2006_set_current(int16_t c, Motor_m2006* m);
+void motor_m2006_set_current(int16_t c1, int16_t c2, Motor_m2006* m1, Motor_m2006* m2);
 // current: -10000~10000 (-10A~10A)
 
 #endif

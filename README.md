@@ -28,7 +28,7 @@ Temple class, with virtue function Enter, Exit and Execute
 #### RestState:State
 In RestState, set all torque to 0
 #### StandState:State
-In StandState，hip and knee joints are fixed by position control，robot keeps standing by PID control of the wheels
+In StandState, hip and knee joints are fixed by position control, robot keeps standing by PID control of the wheels
 
 ## Installation
 1.  git clone “https://github.com/Nokkxz/Mini-Nezha.git”

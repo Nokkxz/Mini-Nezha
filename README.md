@@ -1,41 +1,41 @@
-# mini-nezha
+# Mini-Nezha
 
-## 介绍
-Mini-Nezha控制代码
+## Introduction
+Source code for Mini-Nezha
 
-## 硬件架构
-### 电机：
-2个m2006电机驱动轮子，4个rmd_xpro电机驱动2个knee关节和2个hip关节。
-rmd_x8pro和m2006两种电机各使用一个USB口，通过USB转can模块与电调通信。
+## Hardware
+### Motor：
+AK-80 x2 for wheels driving  
+RMD-X8Pro x4 for 2 knees and 2 hips driving  
+Communicate with PC by high-speed CAN bus communication through a USB2CAN module  
+
 ### IMU：
-1个IMU使用一个USB口与上位机通信。
+mpu6050 module x1, connect to PC with USB  
 
-## 软件架构
+## Software
 ### Motor
-#### Motor_rmd：
-光毓x8pro电机为单线程阻塞式通信（电调接收到一帧can消息后返回一帧）：  
-Motor_rmd类调用组合的Can实例进行包的转义与收发。  
-Motor_rmd类继承模板类Motor，实现函数GetTorque/Speed/Angle, SetTorque/Speed/Angle。
-#### Motor_m2006：
-大疆m2006电机为多线程通信（电调以1kHz的频率发送信息）：  
-Motor_m2006通过收、发两个线程完成通信。  
-Motor_m2006类继承模板类Motor，实现函数GetTorque/Speed/Angle, SetTorque。
+Template class, with virtue function GetTorque/Speed/Angle, SetTorque/Speed/Angle
+#### Motor_rmd:Motor
+Single thread blocking communication  
+Call the composited instance of the Can class to process the Can package
+#### Motor_ak80:Motor
+Receive and send Can package with multithread
 ### Robot
-Robot类中包含hip/knee/wheel_L/R共6个电机，1个IMU。  
-Robot类同时作为StateMachine，包含当前状态CurState，实现了Update、ChangeState函数。
+Composite 6 joint motors and an IMU  
+As the finite state machine, contain CurState, realize Update and ChangeState function
 ### State
-State为模板类，每个状态都继承于State，需要实现Enter、Exit函数（进出状态时执行的函数，Robot::ChangeState中调用）和Execute函数（状态中执行的函数，Robot::Update中执行）。
-#### RestState：
-RestState中，机器人所有电机力矩设为0。
-#### StandState：
-StandState中，机器人hip、knee关节通过位置控制固定，通过pid控制wheel电机让机器人保持站立。
+Temple class, with virtue function Enter, Exit and Execute
+#### RestState:State
+In RestState, set all torque to 0
+#### StandState:State
+In StandState，hip and knee joints are fixed by position control，robot keeps standing by PID control of the wheels
 
-## 安装教程
-1.  git clone “https://gitee.com/nokk/mini-nezha.git”
+## Installation
+1.  git clone “https://github.com/Nokkxz/Mini-Nezha.git”
 2.  mkdir build & cd build
 3.  cmake ..
-4.  sudo code --user-data-dir ="~/.vscode-root"（root权限打开vscode，并打开mini-nezha文件夹）
-5.  F5编译并运行
+4.  sudo code --user-data-dir ="~/.vscode-root" (open VSCode with root access)
+5.  F5 compile and run
 
-## 使用说明
-1.  Motor_rmd还实现了其他不常用的函数（如更改pid，设置编码器零点，获得单圈角度等），未进行进一步封装，详见光毓电机文档。
+## Others
+Motor_rmd Class implements other not commonly used functions (Change PID params, set the zero point...), check the manual of RMD motor for details
